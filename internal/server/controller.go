@@ -69,7 +69,7 @@ func GetNoteHandler(w http.ResponseWriter, r *http.Request) {
 	note, err := db.GetNoteById(id)
 	if errors.Is(err, sql.ErrNoRows) {
 		log.Printf("%s %s - %v", r.Method, r.URL.Path, fmt.Sprintf("заметки с id = %s не существует", id))
-		http.Error(w, fmt.Sprintf("заметки с id = %s не существует", id), http.StatusBadRequest)
+		http.Error(w, fmt.Sprintf("заметки с id = %s не существует", id), http.StatusNotFound)
 		return
 	} else if err != nil {
 		log.Printf("%s %s - %v", r.Method, r.URL.Path, err)
