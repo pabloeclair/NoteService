@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"time"
 
@@ -25,11 +26,16 @@ func CreateNoteTable() error {
 	);`
 
 	_, err := db.ExecContext(ctx, notesTable)
+	if err != nil {
+		err = fmt.Errorf("CreateNoteTable: %w", err)
+	}
 
 	return err
 }
 
-func CreateNote(title string, content string) error {
+func CreateNote(title string, content string) (int, error) {
+
+	var lastId lastId
 
 	query := `INSERT INTO notes (title, content) VALUES ($1, $2);`
 
@@ -39,9 +45,18 @@ func CreateNote(title string, content string) error {
 	db := sqlx.MustConnect("pgx", dsn)
 	defer db.Close()
 
-	_, err := db.QueryContext(ctx, query, title, content)
+	_, err := db.ExecContext(ctx, query, title, content)
+	if err != nil {
+		return -1, fmt.Errorf("CreateNote: %w", err)
+	}
 
-	return err
+	err = db.GetContext(ctx, &lastId, "SELECT id FROM notes ORDER BY id DESC LIMIT 1")
+	if err != nil {
+		return -1, fmt.Errorf("CreateNote: %w", err)
+	}
+
+	return lastId.ID, nil
+
 }
 
 func GetNoteById(id string) (Note, error) {
@@ -57,7 +72,7 @@ func GetNoteById(id string) (Note, error) {
 
 	err := db.GetContext(ctx, &note, query, id)
 	if err != nil {
-		return note, err
+		return note, fmt.Errorf("GetNoteById: %w", err)
 	}
 
 	return note, nil

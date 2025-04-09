@@ -52,13 +52,15 @@ func AddNoteHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = db.CreateNote(note.Title, note.Content)
+	id, err := db.CreateNote(note.Title, note.Content)
 	if err != nil {
 		log.Printf("%s %s - %v", r.Method, r.URL.Path, err)
 		http.Error(w, "ошибка обработки данных", http.StatusInternalServerError)
+		return
 	}
 
 	w.WriteHeader(201)
+	w.Write(fmt.Append(nil, id))
 }
 
 func GetNoteHandler(w http.ResponseWriter, r *http.Request) {

@@ -3,6 +3,7 @@ package db
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 )
 
@@ -14,12 +15,16 @@ type Note struct {
 	Content string `json:"content"`
 }
 
+type lastId struct {
+	ID int `json:"id"`
+}
+
 func ParseToNote(inputJson io.Reader, noteStruct *Note) error {
 
 	decoder := json.NewDecoder(inputJson)
 	err := decoder.Decode(noteStruct)
 	if err != nil {
-		return err
+		return fmt.Errorf("ParseToNote: %w", err)
 	}
 
 	if noteStruct.Title == "" || noteStruct.Content == "" {
@@ -34,7 +39,7 @@ func ParseToJson(inputNote *Note) ([]byte, error) {
 
 	jsonByte, err := json.Marshal(inputNote)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("ParseToJson: %w", err)
 	}
 
 	return jsonByte, nil
