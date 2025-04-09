@@ -22,13 +22,18 @@ func main() {
 	if err != nil {
 		panic(fmt.Errorf("ошибка открытия БД: %w", err))
 	}
-	defer db.Close()
+	db.Close()
 
 	pingCtx, cancel := context.WithTimeout(context.Background(), time.Second*7)
 	defer cancel()
 
 	if err = db.PingContext(pingCtx); err != nil {
 		panic(fmt.Errorf("ошибка подключения к БД: %w", err))
+	}
+
+	err = os.Setenv("DSN", dsn)
+	if err != nil {
+		panic(fmt.Errorf("ошибка сохранения DSN: %w", err))
 	}
 
 	server.Start(adrs)

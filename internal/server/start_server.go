@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"project9/internal/db"
 	"syscall"
 	"time"
 
@@ -41,6 +42,11 @@ func Start(adrs string) {
 	}
 
 	log.Printf("Сервер запущен. Адрес: %s. PID: %d\n", adrs, os.Getppid())
+
+	err = db.CreateNoteTable()
+	if err != nil {
+		panic(fmt.Errorf("ошибка при создании таблиц: %w", err))
+	}
 
 	go func() {
 		err := server.ListenAndServe()
