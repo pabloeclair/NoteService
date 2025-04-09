@@ -37,10 +37,11 @@ func Start(adrs string) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /api/v1/notes/{id}", GetNoteHandler)
 	mux.HandleFunc("POST /api/v1/notes", AddNoteHandler)
+	loggingMiddleware := Middleware(mux)
 
 	server := http.Server{
 		Addr:    adrs,
-		Handler: mux,
+		Handler: loggingMiddleware,
 	}
 
 	log.Printf("Сервер запущен. Адрес: %s. PID: %d\n", adrs, os.Getppid())
