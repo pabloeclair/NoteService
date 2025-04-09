@@ -22,7 +22,6 @@ func main() {
 	if err != nil {
 		panic(fmt.Errorf("ошибка открытия БД: %w", err))
 	}
-	db.Close()
 
 	pingCtx, cancel := context.WithTimeout(context.Background(), time.Second*7)
 	defer cancel()
@@ -30,6 +29,8 @@ func main() {
 	if err = db.PingContext(pingCtx); err != nil {
 		panic(fmt.Errorf("ошибка подключения к БД: %w", err))
 	}
+
+	db.Close()
 
 	err = os.Setenv("DSN", dsn)
 	if err != nil {
