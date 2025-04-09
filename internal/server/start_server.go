@@ -35,6 +35,8 @@ func Start(adrs string) {
 	defer serverCancel()
 
 	mux := http.NewServeMux()
+	mux.HandleFunc("GET /api/v1/notes/{id}", GetNoteHandler)
+	mux.HandleFunc("POST /api/v1/notes", AddNoteHandler)
 
 	server := http.Server{
 		Addr:    adrs,
