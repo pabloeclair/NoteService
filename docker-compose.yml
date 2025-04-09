@@ -1,0 +1,10 @@
+services:
+    db:
+        image: postgres:14
+        container_name: go_postgres_db
+        environment:
+            - POSTGRES_USER=pablo_3_16
+            - POSTGRES_PASSWORD=pablo_pass
+            - POSTGRES_DB=go_db
+        ports:
+            - "5432:5432"
