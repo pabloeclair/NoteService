@@ -135,3 +135,22 @@ func DropNote(id string) error {
 
 	return nil
 }
+
+func GetNotesByContent(filter string) (NotesList, error) {
+	var notes []Note
+	var notesList NotesList
+
+	ctx, cancel := context.WithTimeout(context.Background(), 7*time.Second)
+	defer cancel()
+
+	dsn := os.Getenv("DSN")
+	db := sqlx.MustConnect("pgx", dsn)
+	defer db.Close()
+
+	err := db.SelectContext(ctx, &notes, `SELECT * FROM notes WHERE content LIKE '%' || $1 || '%'`, filter)
+	notesList.SearchResult = notes
+	if err != nil {
+		return notesList, fmt.Errorf("GetNotesByContent: %w", err)
+	}
+	return notesList, nil
+}

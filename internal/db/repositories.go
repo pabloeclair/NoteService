@@ -18,6 +18,10 @@ type Note struct {
 	Content string `json:"content"`
 }
 
+type NotesList struct {
+	SearchResult []Note `json:"search_result`
+}
+
 func ParseToNote(inputJson io.Reader, noteStruct *Note) error {
 
 	decoder := json.NewDecoder(inputJson)
@@ -30,7 +34,7 @@ func ParseToNote(inputJson io.Reader, noteStruct *Note) error {
 
 }
 
-func ParseToJson(inputNote *Note) ([]byte, error) {
+func ParseToJson(inputNote any) ([]byte, error) {
 
 	jsonByte, err := json.Marshal(inputNote)
 	if err != nil {

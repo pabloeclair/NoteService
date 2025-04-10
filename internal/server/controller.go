@@ -136,3 +136,24 @@ func DeleteNoteHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "ошибка обработки данных", http.StatusInternalServerError)
 	}
 }
+
+func GetSearchNotesHandlerv(w http.ResponseWriter, r *http.Request) {
+
+	filter := r.URL.Query().Get("q")
+
+	notes, err := db.GetNotesByContent(filter)
+	if err != nil {
+		log.Printf("%s %s - 500 Internal Server Error: %v", r.Method, r.URL.Path, err)
+		http.Error(w, "ошибка обработки данных", http.StatusInternalServerError)
+		return
+	}
+
+	notesByte, err := db.ParseToJson(&notes)
+	if err != nil {
+		log.Printf("%s %s - 500 Internal Server Error: %v", r.Method, r.URL.Path, err)
+		http.Error(w, "ошибка обработки данных", http.StatusInternalServerError)
+		return
+	}
+
+	w.Write(notesByte)
+}
