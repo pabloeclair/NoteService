@@ -2,6 +2,7 @@ package server
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -48,7 +49,7 @@ func AddNoteHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, err := db.CreateNote(note.Title, note.Content)
+	idStruct, err := db.CreateNote(note.Title, note.Content)
 	if errors.Is(err, db.ErrInvalidFormatJson) {
 		log.Printf("%s %s - 400 Bad Request: %v", r.Method, r.URL.Path, err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -59,8 +60,16 @@ func AddNoteHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	idByte, err := json.Marshal(&idStruct)
+	if err != nil {
+		log.Printf("%s %s - 500 Internal Server Error: %v", r.Method, r.URL.Path, err)
+		http.Error(w, "ошибка обработки данных", http.StatusInternalServerError)
+		return
+	}
+
 	w.WriteHeader(201)
-	w.Write(fmt.Append(nil, id))
+	w.Write(idByte)
+
 }
 
 func GetNoteHandler(w http.ResponseWriter, r *http.Request) {

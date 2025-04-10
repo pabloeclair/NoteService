@@ -32,11 +32,12 @@ func CreateNoteTable() error {
 	return err
 }
 
-func CreateNote(title string, content string) (int, error) {
-	var lastId int
+func CreateNote(title string, content string) (LastId, error) {
+	var id int
+	var idStruct LastId
 
 	if title == "" || content == "" {
-		return -1, ErrInvalidFormatJson
+		return idStruct, ErrInvalidFormatJson
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 7*time.Second)
@@ -48,15 +49,17 @@ func CreateNote(title string, content string) (int, error) {
 
 	_, err := db.ExecContext(ctx, `INSERT INTO notes (title, content) VALUES ($1, $2);`, title, content)
 	if err != nil {
-		return -1, fmt.Errorf("CreateNote: %w", err)
+		return idStruct, fmt.Errorf("CreateNote: %w", err)
 	}
 
-	err = db.GetContext(ctx, &lastId, "SELECT id FROM notes ORDER BY id DESC LIMIT 1")
+	err = db.GetContext(ctx, &id, "SELECT id FROM notes ORDER BY id DESC LIMIT 1")
 	if err != nil {
-		return -1, fmt.Errorf("CreateNote: %w", err)
+		return idStruct, fmt.Errorf("CreateNote: %w", err)
 	}
 
-	return lastId, nil
+	idStruct.LastId = id
+
+	return idStruct, nil
 
 }
 

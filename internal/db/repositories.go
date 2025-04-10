@@ -22,6 +22,10 @@ type NotesList struct {
 	SearchResult []Note `json:"search_result"`
 }
 
+type LastId struct {
+	LastId int `json:"id"`
+}
+
 func ParseToNote(inputJson io.Reader, noteStruct *Note) error {
 
 	decoder := json.NewDecoder(inputJson)
