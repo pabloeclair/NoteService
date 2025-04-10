@@ -122,3 +122,17 @@ func PutNoteHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Write(resJson)
 }
+
+func DeleteNoteHandler(w http.ResponseWriter, r *http.Request) {
+
+	id := r.PathValue("id")
+
+	err := db.DropNote(id)
+	if errors.Is(err, sql.ErrNoRows) {
+		log.Printf("%s %s - 404 Not Found: %v", r.Method, r.URL.Path, fmt.Sprintf("заметки с id = %s не существует", id))
+		http.Error(w, fmt.Sprintf("заметки с id = %s не существует", id), http.StatusNotFound)
+	} else if err != nil {
+		log.Printf("%s %s - 500 Internal Server Error: %v", r.Method, r.URL.Path, err)
+		http.Error(w, "ошибка обработки данных", http.StatusInternalServerError)
+	}
+}

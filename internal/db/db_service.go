@@ -112,3 +112,26 @@ func UpdateNote(id string, title string, content string) (Note, error) {
 	}
 	return note, nil
 }
+
+func DropNote(id string) error {
+	var check int
+
+	ctx, cancel := context.WithTimeout(context.Background(), 7*time.Second)
+	defer cancel()
+
+	dsn := os.Getenv("DSN")
+	db := sqlx.MustConnect("pgx", dsn)
+	defer db.Close()
+
+	err := db.GetContext(ctx, &check, `SELECT id FROM notes WHERE id = $1`, id)
+	if err != nil {
+		return fmt.Errorf("DropNote: %w", err)
+	}
+
+	_, err = db.ExecContext(ctx, `DELETE FROM notes WHERE id = $1`, id)
+	if err != nil {
+		return fmt.Errorf("DropNote: %w", err)
+	}
+
+	return nil
+}
