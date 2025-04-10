@@ -19,7 +19,7 @@ type Note struct {
 }
 
 type NotesList struct {
-	SearchResult []Note `json:"search_result`
+	SearchResult []Note `json:"search_result"`
 }
 
 func ParseToNote(inputJson io.Reader, noteStruct *Note) error {
