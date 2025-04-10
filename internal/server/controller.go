@@ -42,19 +42,19 @@ func AddNoteHandler(w http.ResponseWriter, r *http.Request) {
 	var note db.Note
 
 	err := db.ParseToNote(r.Body, &note)
-	if errors.Is(err, db.ErrInvalidFormatJson) {
-		log.Printf("%s %s - %v", r.Method, r.URL.Path, err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	} else if err != nil {
-		log.Printf("%s %s - %v", r.Method, r.URL.Path, err)
-		http.Error(w, "ошибка обработки данных", http.StatusInternalServerError)
+	if err != nil {
+		log.Printf("%s %s - 400 Bad Request: %v", r.Method, r.URL.Path, err)
+		http.Error(w, "неверный тип json", http.StatusBadRequest)
 		return
 	}
 
 	id, err := db.CreateNote(note.Title, note.Content)
-	if err != nil {
-		log.Printf("%s %s - %v", r.Method, r.URL.Path, err)
+	if errors.Is(err, db.ErrInvalidFormatJson) {
+		log.Printf("%s %s - 400 Bad Request: %v", r.Method, r.URL.Path, err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	} else if err != nil {
+		log.Printf("%s %s - 500 Internal Server Error: %v", r.Method, r.URL.Path, err)
 		http.Error(w, "ошибка обработки данных", http.StatusInternalServerError)
 		return
 	}
@@ -68,22 +68,57 @@ func GetNoteHandler(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	note, err := db.GetNoteById(id)
 	if errors.Is(err, sql.ErrNoRows) {
-		log.Printf("%s %s - %v", r.Method, r.URL.Path, fmt.Sprintf("заметки с id = %s не существует", id))
+		log.Printf("%s %s - 404 Not Found: %v", r.Method, r.URL.Path, fmt.Sprintf("заметки с id = %s не существует", id))
 		http.Error(w, fmt.Sprintf("заметки с id = %s не существует", id), http.StatusNotFound)
 		return
 	} else if err != nil {
-		log.Printf("%s %s - %v", r.Method, r.URL.Path, err)
+		log.Printf("%s %s - 500 Internal Server Error: %v", r.Method, r.URL.Path, err)
 		http.Error(w, "ошибка обработки данных", http.StatusInternalServerError)
 		return
 	}
 
 	jsonByte, err := db.ParseToJson(&note)
 	if err != nil {
-		log.Printf("%s %s - %v", r.Method, r.URL.Path, err)
+		log.Printf("%s %s - 500 Internal Server Error: %v", r.Method, r.URL.Path, err)
 		http.Error(w, "ошибка обработки данных", http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(jsonByte)
+}
+
+func PutNoteHandler(w http.ResponseWriter, r *http.Request) {
+	var note db.Note
+
+	id := r.PathValue("id")
+	err := db.ParseToNote(r.Body, &note)
+	if err != nil {
+		log.Printf("%s %s - 400 Bad Request: %v", r.Method, r.URL.Path, err)
+		http.Error(w, "неверный тип json", http.StatusBadRequest)
+		return
+	}
+
+	resNote, err := db.UpdateNote(id, note.Title, note.Content)
+	if errors.Is(err, db.ErrInvalifFotmatJsonPutRequset) {
+		log.Printf("%s %s - 400 Bad Request: %v", r.Method, r.URL.Path, err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	} else if errors.Is(err, sql.ErrNoRows) {
+		log.Printf("%s %s - 404 Not Found: %v", r.Method, r.URL.Path, fmt.Sprintf("заметки с id = %s не существует", id))
+		http.Error(w, fmt.Sprintf("заметки с id = %s не существует", id), http.StatusNotFound)
+		return
+	} else if err != nil {
+		log.Printf("%s %s - 500 Internal Server Error: %v", r.Method, r.URL.Path, err)
+		http.Error(w, "ошибка обработки данных", http.StatusInternalServerError)
+		return
+	}
+
+	resJson, err := db.ParseToJson(&resNote)
+	if err != nil {
+		log.Printf("%s %s - 500 Internal Server Error: %v", r.Method, r.URL.Path, err)
+		http.Error(w, "ошибка обработки данных", http.StatusInternalServerError)
+		return
+	}
+	w.Write(resJson)
 }

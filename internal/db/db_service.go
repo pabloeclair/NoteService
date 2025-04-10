@@ -33,8 +33,12 @@ func CreateNoteTable() error {
 }
 
 func CreateNote(title string, content string) (int, error) {
+	var lastId int
 
-	var lastId lastId
+	if title == "" || content == "" {
+		return -1, ErrInvalidFormatJson
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), 7*time.Second)
 	defer cancel()
 
@@ -52,13 +56,13 @@ func CreateNote(title string, content string) (int, error) {
 		return -1, fmt.Errorf("CreateNote: %w", err)
 	}
 
-	return lastId.ID, nil
+	return lastId, nil
 
 }
 
 func GetNoteById(id string) (Note, error) {
-
 	var note Note
+
 	ctx, cancel := context.WithTimeout(context.Background(), 7*time.Second)
 	defer cancel()
 
@@ -71,5 +75,40 @@ func GetNoteById(id string) (Note, error) {
 		return note, fmt.Errorf("GetNoteById: %w", err)
 	}
 
+	return note, nil
+}
+
+func UpdateNote(id string, title string, content string) (Note, error) {
+	var note Note
+
+	ctx, cancel := context.WithTimeout(context.Background(), 7*time.Second)
+	defer cancel()
+
+	dsn := os.Getenv("DSN")
+	db := sqlx.MustConnect("pgx", dsn)
+	defer db.Close()
+
+	if content == "" && title == "" {
+		return note, ErrInvalifFotmatJsonPutRequset
+	}
+
+	if title != "" {
+		_, err := db.ExecContext(ctx, `UPDATE notes SET title = $1 WHERE id = $2`, title, id)
+		if err != nil {
+			return note, fmt.Errorf("UpdateNote: %w", err)
+		}
+	}
+
+	if content != "" {
+		_, err := db.ExecContext(ctx, `UPDATE notes SET content = $1 WHERE id = $2`, content, id)
+		if err != nil {
+			return note, fmt.Errorf("UpdateNote: %w", err)
+		}
+	}
+
+	err := db.GetContext(ctx, &note, `SELECT * FROM notes WHERE id = $1`, id)
+	if err != nil {
+		return note, fmt.Errorf("UpdateNote: %w", err)
+	}
 	return note, nil
 }

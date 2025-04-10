@@ -7,16 +7,15 @@ import (
 	"io"
 )
 
-var ErrInvalidFormatJson = errors.New(`поля "title" и "content" являются обязательными`)
+var (
+	ErrInvalidFormatJson           = errors.New(`поля "title" и "content" являются обязательными`)
+	ErrInvalifFotmatJsonPutRequset = errors.New(`одно из полей "title" или "content" должно обязательно присутствовать`)
+)
 
 type Note struct {
 	ID      int    `json:"id"`
 	Title   string `json:"title"`
 	Content string `json:"content"`
-}
-
-type lastId struct {
-	ID int `json:"id"`
 }
 
 func ParseToNote(inputJson io.Reader, noteStruct *Note) error {
@@ -25,10 +24,6 @@ func ParseToNote(inputJson io.Reader, noteStruct *Note) error {
 	err := decoder.Decode(noteStruct)
 	if err != nil {
 		return fmt.Errorf("ParseToNote: %w", err)
-	}
-
-	if noteStruct.Title == "" || noteStruct.Content == "" {
-		return ErrInvalidFormatJson
 	}
 
 	return nil

@@ -36,6 +36,7 @@ func Start(adrs string) {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /api/v1/notes/{id}", GetNoteHandler)
+	mux.HandleFunc("PUT /api/v1/notes/{id}", PutNoteHandler)
 	mux.HandleFunc("POST /api/v1/notes", AddNoteHandler)
 	loggingMiddleware := Middleware(mux)
 
