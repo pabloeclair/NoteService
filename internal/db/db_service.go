@@ -11,11 +11,10 @@ import (
 
 func CreateNoteTable() error {
 
-	dsn := os.Getenv("DSN")
-
 	ctx, cancel := context.WithTimeout(context.Background(), 7*time.Second)
 	defer cancel()
 
+	dsn := os.Getenv("DSN")
 	db := sqlx.MustConnect("pgx", dsn)
 	defer db.Close()
 
@@ -36,16 +35,14 @@ func CreateNoteTable() error {
 func CreateNote(title string, content string) (int, error) {
 
 	var lastId lastId
-
-	query := `INSERT INTO notes (title, content) VALUES ($1, $2);`
-
-	dsn := os.Getenv("DSN")
 	ctx, cancel := context.WithTimeout(context.Background(), 7*time.Second)
 	defer cancel()
+
+	dsn := os.Getenv("DSN")
 	db := sqlx.MustConnect("pgx", dsn)
 	defer db.Close()
 
-	_, err := db.ExecContext(ctx, query, title, content)
+	_, err := db.ExecContext(ctx, `INSERT INTO notes (title, content) VALUES ($1, $2);`, title, content)
 	if err != nil {
 		return -1, fmt.Errorf("CreateNote: %w", err)
 	}
@@ -62,15 +59,14 @@ func CreateNote(title string, content string) (int, error) {
 func GetNoteById(id string) (Note, error) {
 
 	var note Note
-	query := `SELECT * FROM notes WHERE id = $1`
-
-	dsn := os.Getenv("DSN")
 	ctx, cancel := context.WithTimeout(context.Background(), 7*time.Second)
 	defer cancel()
+
+	dsn := os.Getenv("DSN")
 	db := sqlx.MustConnect("pgx", dsn)
 	defer db.Close()
 
-	err := db.GetContext(ctx, &note, query, id)
+	err := db.GetContext(ctx, &note, `SELECT * FROM notes WHERE id = $1`, id)
 	if err != nil {
 		return note, fmt.Errorf("GetNoteById: %w", err)
 	}
