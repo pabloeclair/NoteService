@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"errors"
@@ -9,6 +10,7 @@ import (
 	"net/http"
 	"project9/internal/db"
 	"strconv"
+	"time"
 )
 
 type loggingReponseWriter struct {
@@ -30,6 +32,9 @@ func Middleware(next http.Handler) http.Handler {
 
 		w.Header().Set("Content-Type", "application/json")
 		lrw := NewLoggingResponseWriter(w)
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*7)
+		defer cancel()
+		r = r.WithContext(ctx)
 		next.ServeHTTP(lrw, r)
 
 		if lrw.statusCode == http.StatusOK {
@@ -50,7 +55,8 @@ func AddNoteHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	idStruct, err := db.CreateNote(note.Title, note.Content)
+	ctx := r.Context()
+	idStruct, err := db.CreateNote(note.Title, note.Content, ctx)
 	if errors.Is(err, db.ErrInvalidFormatJson) {
 		log.Printf("%s %s - 400 Bad Request: %v", r.Method, r.URL.Path, err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -82,7 +88,9 @@ func GetNoteHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "в строку пути необходимо ввести число – id заметки", http.StatusBadRequest)
 		return
 	}
-	note, err := db.GetNoteById(id)
+
+	ctx := r.Context()
+	note, err := db.GetNoteById(id, ctx)
 	if errors.Is(err, sql.ErrNoRows) {
 		log.Printf("%s %s - 404 Not Found: %v", r.Method, r.URL.Path, fmt.Sprintf("заметки с id = %s не существует", id))
 		http.Error(w, fmt.Sprintf("заметки с id = %s не существует", id), http.StatusNotFound)
@@ -115,7 +123,8 @@ func PutNoteHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resNote, err := db.UpdateNote(id, note.Title, note.Content)
+	ctx := r.Context()
+	resNote, err := db.UpdateNote(id, note.Title, note.Content, ctx)
 	if errors.Is(err, db.ErrInvalifFotmatJsonPutRequset) {
 		log.Printf("%s %s - 400 Bad Request: %v", r.Method, r.URL.Path, err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -143,7 +152,8 @@ func DeleteNoteHandler(w http.ResponseWriter, r *http.Request) {
 
 	id := r.PathValue("id")
 
-	err := db.DropNote(id)
+	ctx := r.Context()
+	err := db.DropNote(id, ctx)
 	if errors.Is(err, sql.ErrNoRows) {
 		log.Printf("%s %s - 404 Not Found: %v", r.Method, r.URL.Path, fmt.Sprintf("заметки с id = %s не существует", id))
 		http.Error(w, fmt.Sprintf("заметки с id = %s не существует", id), http.StatusNotFound)
@@ -156,8 +166,8 @@ func DeleteNoteHandler(w http.ResponseWriter, r *http.Request) {
 func GetSearchNotesHandlerv(w http.ResponseWriter, r *http.Request) {
 
 	filter := r.URL.Query().Get("q")
-
-	notes, err := db.GetNotesByContent(filter)
+	ctx := r.Context()
+	notes, err := db.GetNotesByContent(filter, ctx)
 	if err != nil {
 		log.Printf("%s %s - 500 Internal Server Error: %v", r.Method, r.URL.Path, err)
 		http.Error(w, "ошибка обработки данных", http.StatusInternalServerError)

@@ -32,16 +32,13 @@ func CreateNoteTable() error {
 	return err
 }
 
-func CreateNote(title string, content string) (LastId, error) {
+func CreateNote(title string, content string, ctx context.Context) (LastId, error) {
 	var id int
 	var idStruct LastId
 
 	if title == "" || content == "" {
 		return idStruct, ErrInvalidFormatJson
 	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), 7*time.Second)
-	defer cancel()
 
 	dsn := os.Getenv("DSN")
 	db := sqlx.MustConnect("pgx", dsn)
@@ -63,11 +60,8 @@ func CreateNote(title string, content string) (LastId, error) {
 
 }
 
-func GetNoteById(id string) (Note, error) {
+func GetNoteById(id string, ctx context.Context) (Note, error) {
 	var note Note
-
-	ctx, cancel := context.WithTimeout(context.Background(), 7*time.Second)
-	defer cancel()
 
 	dsn := os.Getenv("DSN")
 	db := sqlx.MustConnect("pgx", dsn)
@@ -81,11 +75,8 @@ func GetNoteById(id string) (Note, error) {
 	return note, nil
 }
 
-func UpdateNote(id string, title string, content string) (Note, error) {
+func UpdateNote(id string, title string, content string, ctx context.Context) (Note, error) {
 	var note Note
-
-	ctx, cancel := context.WithTimeout(context.Background(), 7*time.Second)
-	defer cancel()
 
 	dsn := os.Getenv("DSN")
 	db := sqlx.MustConnect("pgx", dsn)
@@ -116,11 +107,8 @@ func UpdateNote(id string, title string, content string) (Note, error) {
 	return note, nil
 }
 
-func DropNote(id string) error {
+func DropNote(id string, ctx context.Context) error {
 	var check int
-
-	ctx, cancel := context.WithTimeout(context.Background(), 7*time.Second)
-	defer cancel()
 
 	dsn := os.Getenv("DSN")
 	db := sqlx.MustConnect("pgx", dsn)
@@ -139,12 +127,9 @@ func DropNote(id string) error {
 	return nil
 }
 
-func GetNotesByContent(filter string) (NotesList, error) {
+func GetNotesByContent(filter string, ctx context.Context) (NotesList, error) {
 	var notes []Note
 	var notesList NotesList
-
-	ctx, cancel := context.WithTimeout(context.Background(), 7*time.Second)
-	defer cancel()
 
 	dsn := os.Getenv("DSN")
 	db := sqlx.MustConnect("pgx", dsn)
