@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"project9/internal/db"
+	"strconv"
 )
 
 type loggingReponseWriter struct {
@@ -75,6 +76,12 @@ func AddNoteHandler(w http.ResponseWriter, r *http.Request) {
 func GetNoteHandler(w http.ResponseWriter, r *http.Request) {
 
 	id := r.PathValue("id")
+	_, err := strconv.Atoi(id)
+	if err != nil {
+		log.Printf("%s %s - 400 Bad Request: в строку пути необходимо ввести число – id заметки", r.Method, r.URL.Path)
+		http.Error(w, "в строку пути необходимо ввести число – id заметки", http.StatusBadRequest)
+		return
+	}
 	note, err := db.GetNoteById(id)
 	if errors.Is(err, sql.ErrNoRows) {
 		log.Printf("%s %s - 404 Not Found: %v", r.Method, r.URL.Path, fmt.Sprintf("заметки с id = %s не существует", id))
